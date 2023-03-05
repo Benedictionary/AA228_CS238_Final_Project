@@ -62,10 +62,10 @@ end
 
 #=================MAIN PROGRAM STARTS HERE=================#
 #Assumes 2D Square Grid World
-dimmax = 10
-threshold = 0.9
+dimmax = 10 #nxn grid size
+threshold = 0.9 #threshold = likelyhood of performing the correct action
 actionList = collect(0:3)
-repeatActionPerState = 200
+repeatActionPerState = 200 #The number of times we sample the rewards and next state for a given an sample+action.
 
 #Generate List of all Wall Locations
 wallList = filter(:state_type => ==("W"), handdrawn_df).states_idx
@@ -76,11 +76,14 @@ output_df = DataFrame(s = stateList)
 output_df = repeat(output_df, inner = repeatActionPerState*length(actionList))
 output_df[!, :a] = repeat(repeat(actionList, inner=repeatActionPerState),length(stateList))
 display(output_df)
+
+#Generate all the next states based on current state, action, chance of random movement, and list of walls/boundaries
 spList = []
 for row in eachrow(output_df)
     append!(spList, nextState(row[:s], row[:a], wallList, actionList, threshold))
 end
 
+#Generate list of rewards given the next state, and whether we moved in a way that ran us into a wall/boundary.
 rewardList = []
 for (next_state, state) in zip(spList, output_df.s)
     reward = filter(:states_idx => ==(next_state), handdrawn_df).reward[1]
